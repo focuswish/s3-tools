@@ -1,5 +1,7 @@
 ## Examples
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/focuswish/s3-tools.svg)](https://greenkeeper.io/)
+
 ```js
 
 const tools = require('s3-tools')({
