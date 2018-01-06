@@ -35,8 +35,7 @@ Base.prototype.append = function (text, args) {
         .then(data => {
         let stream = new stream_1.Readable;
         stream.push(data);
-        stream.push(typeof text === 'string' ? text += '\n' :
-            text.join('\n'));
+        stream.push((typeof text === 'string' ? text : text.join('\n')) + '\n');
         stream.push(null);
         return this.streamUpload(stream, args).data;
     });
