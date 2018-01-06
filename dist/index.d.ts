@@ -1,2 +1,3 @@
-declare const _default: (a: any, b: any) => any;
+import Tools from './Tools';
+declare const _default: (params: any, AwsConfig: any) => Tools;
 export default _default;

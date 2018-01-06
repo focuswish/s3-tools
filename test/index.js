@@ -32,8 +32,8 @@ const log = promise => promise
 describe('s3Tools.get', function() {
   it('s3Tools.get', function(done) {
     let tools = s3Tools({ bucket: 'printawesome' })
-    let promise = tools.promisify('getObject')({key: 'test.txt'}).text().data
-    log(promise)
+    let promise = tools.promisify('getObject')({key: 'test.txt'}).text()
+    //log(promise)
 
     promise.should.eventually.be.fulfilled.notify(done)
   })
