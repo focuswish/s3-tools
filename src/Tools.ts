@@ -112,4 +112,5 @@ class Tools extends Base {
   }
 }
 
+module.exports = Tools;
 export default Tools;
