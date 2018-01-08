@@ -94,6 +94,6 @@ class Tools extends Base_1.default {
         return this;
     }
 }
-module.exports = Tools;
 exports.default = Tools;
+exports.Tools = Tools;
 //# sourceMappingURL=Tools.js.map

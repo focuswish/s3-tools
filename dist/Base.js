@@ -8,6 +8,6 @@ class Base {
         this.s3 = new AWS.S3(this.AwsConfig);
     }
 }
-module.exports = Base;
 exports.default = Base;
+exports.Base = Base;
 //# sourceMappingURL=Base.js.map

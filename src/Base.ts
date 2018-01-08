@@ -23,5 +23,6 @@ class Base {
   }
 }
 
-module.exports = Base;
+
 export default Base
+exports.Base = Base;
