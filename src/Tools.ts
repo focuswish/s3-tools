@@ -5,62 +5,56 @@ import * as AWS from 'aws-sdk';
 
 class Tools extends Base {
   promisify (method) {
-    return (params = {}) => {
-      this.data = new Promise((resolve, reject) => {
-        this.s3[method](
-          capKeys({
-            ...this.params,
-            ...params
-          }), (err, data) => {
-          if(err) reject(err)
-          else resolve(data)
+    return (...args) => {
+      if(!args.length) args.push({})
+
+      args[args.length - 1] = capKeys({
+        ...this.params,
+        ...args[args.length - 1]
+      })
+      
+      let promise = new Promise((...promise) => {
+        args.push((err, data) => {
+          if(err) promise[1](err)
+          else promise[0](data)
         })
       })
-  
+
+      this.s3[method](...args)
+      this.promise = () => promise;
+      
       return this;
     } 
   }
 
-  value () {
-    return this.data
-  }
+  value = () => this.promise()
 
-  text = async () => {
-    let value = await this.value()
-    return value.Body.toString('ascii')
-  }
+  text = () => this.promise()
+    .then(value => value.Body.toString('ascii'))
+  
 
   append = async (text, args = {}) => {
-    let data = await this.promisify('getObject')(args).text();
+    let data = await this.get(args).text()
     let stream = new Readable
     stream.push(data)
     stream.push((typeof text === 'string' ? text : text.join('\n')) + '\n')
     stream.push(null)
-    return this.streamUpload(stream, args)
+    this.streamUpload(stream, args)
+    return this.upload.promise()
   }
 
-  getSignedUrl (
-    operation = 'getObject', 
-    params = {}
-  ) {
-    return new Promise((resolve, reject) => {
-      return this.s3.getSignedUrl(operation, 
-        capKeys({
-          ...this.params, 
-          ...params
-        }), (err, data) => {
-          if(err) reject(err)
-          else resolve(data)
-      })
-    })
-  }
+  get = (...args) => this.promisify('getObject')(...args)
+  remove = (...args) => this.promisify('deleteObject')(...args)
+  getSignedUrl = (...args) => this.promisify('getSignedUrl')(...args)
+  copy = (...args) => this.promisify('copyObject')(...args)
+  wait = (...args) => this.promisify('waitFor')(...args)
 
   streamUpload (stream, { tags = undefined, ...rest } = {}) {  
-    const run = (resolve, reject) => {
+    const run = () => {
       let Body : any = new PassThrough() 
   
       AWS.config.update(this.AwsConfig)
-      let upload = new AWS.S3.ManagedUpload({
+      this.upload = new AWS.S3.ManagedUpload({
         tags,
         params: {
           Body,
@@ -70,17 +64,14 @@ class Tools extends Base {
           })
         }
       })   
-      upload.send((err, data) => {
-        if(err) reject(err)
-        else resolve(data)
-      })
+      this.upload.send()
   
       return Body;
     }
-  
-    return new Promise((resolve, reject) => stream.pipe(
-      run(resolve, reject))
-    )
+
+    stream.pipe(run())
+
+    return this.upload;
   }
 
   streamObject (params = {}) { 

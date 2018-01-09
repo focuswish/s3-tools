@@ -24,64 +24,57 @@ const AWS = require("aws-sdk");
 class Tools extends Base_1.default {
     constructor() {
         super(...arguments);
-        this.text = () => __awaiter(this, void 0, void 0, function* () {
-            let value = yield this.value();
-            return value.Body.toString('ascii');
-        });
+        this.value = () => this.promise();
+        this.text = () => this.promise()
+            .then(value => value.Body.toString('ascii'));
         this.append = (text, args = {}) => __awaiter(this, void 0, void 0, function* () {
-            let data = yield this.promisify('getObject')(args).text();
+            let data = yield this.get(args).text();
             let stream = new stream_1.Readable;
             stream.push(data);
             stream.push((typeof text === 'string' ? text : text.join('\n')) + '\n');
             stream.push(null);
-            return this.streamUpload(stream, args);
+            this.streamUpload(stream, args);
+            return this.upload.promise();
         });
+        this.get = (...args) => this.promisify('getObject')(...args);
+        this.remove = (...args) => this.promisify('deleteObject')(...args);
+        this.getSignedUrl = (...args) => this.promisify('getSignedUrl')(...args);
+        this.copy = (...args) => this.promisify('copyObject')(...args);
+        this.wait = (...args) => this.promisify('waitFor')(...args);
         this.createTagSet = (data) => helpers_1.createTagSet(data);
     }
     promisify(method) {
-        return (params = {}) => {
-            this.data = new Promise((resolve, reject) => {
-                this.s3[method](helpers_1.capKeys(Object.assign({}, this.params, params)), (err, data) => {
+        return (...args) => {
+            if (!args.length)
+                args.push({});
+            args[args.length - 1] = helpers_1.capKeys(Object.assign({}, this.params, args[args.length - 1]));
+            let promise = new Promise((...promise) => {
+                args.push((err, data) => {
                     if (err)
-                        reject(err);
+                        promise[1](err);
                     else
-                        resolve(data);
+                        promise[0](data);
                 });
             });
+            this.s3[method](...args);
+            this.promise = () => promise;
             return this;
         };
     }
-    value() {
-        return this.data;
-    }
-    getSignedUrl(operation = 'getObject', params = {}) {
-        return new Promise((resolve, reject) => {
-            return this.s3.getSignedUrl(operation, helpers_1.capKeys(Object.assign({}, this.params, params)), (err, data) => {
-                if (err)
-                    reject(err);
-                else
-                    resolve(data);
-            });
-        });
-    }
     streamUpload(stream, _a = {}) {
         var { tags = undefined } = _a, rest = __rest(_a, ["tags"]);
-        const run = (resolve, reject) => {
+        const run = () => {
             let Body = new stream_1.PassThrough();
             AWS.config.update(this.AwsConfig);
-            let upload = new AWS.S3.ManagedUpload({
+            this.upload = new AWS.S3.ManagedUpload({
                 tags,
                 params: Object.assign({ Body }, helpers_1.capKeys(Object.assign({}, this.params, rest)))
             });
-            upload.send((err, data) => {
-                if (err)
-                    reject(err);
-                else
-                    resolve(data);
-            });
+            this.upload.send();
             return Body;
         };
-        return new Promise((resolve, reject) => stream.pipe(run(resolve, reject)));
+        stream.pipe(run());
+        return this.upload;
     }
     streamObject(params = {}) {
         this.stream = this.s3.getObject(helpers_1.capKeys(Object.assign({}, this.params, params)))

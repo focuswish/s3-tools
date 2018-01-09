@@ -6,7 +6,9 @@ interface Base {
   s3: any,
   data: any,
   stream: any,
-  region: any
+  region: any,
+  upload: any,
+  promise: any
 }
 
 class Base {
@@ -15,9 +17,10 @@ class Base {
     AwsConfig = {}
   ) {
     this.AwsConfig = {
-      region: process.env.AWS_S3_BUCKET_REGION || 'us-east-1',
+      region: 'us-east-1',
       ...AwsConfig
     }
+    
     this.params = params;
     this.s3 = new AWS.S3(this.AwsConfig)
   }

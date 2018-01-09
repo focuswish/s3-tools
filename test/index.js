@@ -20,7 +20,7 @@ let should = chai.should();
 
 chai.use(chaiAsPromised)
 
-let s3Tools = require('../dist')
+let { tools: s3Tools } = require('../dist')
 
 const fs = require('fs');
 const path = require('path');
@@ -32,8 +32,8 @@ const log = promise => promise
 describe('s3Tools.get', function() {
   it('s3Tools.get', function(done) {
     let tools = s3Tools({ bucket: 'printawesome' })
-    let promise = tools.promisify('getObject')({key: 'test.txt'}).text()
-    //log(promise)
+    let promise = tools.get({key: 'test.txt'}).text()
+    log(promise)
 
     promise.should.eventually.be.fulfilled.notify(done)
   })
@@ -48,21 +48,23 @@ describe('s3Tools.append', function() {
   })
 })
 
-/*describe('s3Tools.put', function() {
+describe('s3Tools.put', function() {
   it('s3Tools.put', function(done) {
     let tools = s3Tools({ bucket: 'printawesome' })
+    
     const stream = fs.createReadStream(
       path.join(
         __dirname, 'test.txt'
       )
     )
-    let promise = tools.streamUpload(stream, {
+    
+    let upload = tools.streamUpload(stream, {
       key: 'test.txt',
       tags: [{ Key: 'tag1', Value: 'value1' }]
     })
-
+    setTimeout(upload.abort.bind(upload), 200);
+    let promise = upload.promise()
     log(promise)
     promise.should.eventually.be.fulfilled.notify(done)
   })
-})*/
-
+})

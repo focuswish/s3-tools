@@ -5,6 +5,8 @@ interface Base {
     data: any;
     stream: any;
     region: any;
+    upload: any;
+    promise: any;
 }
 declare class Base {
     constructor(params?: {}, AwsConfig?: {});
