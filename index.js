@@ -29,7 +29,7 @@ module.exports = (
       }, {})
   }
 
-  const upload = (stream, params) => {
+  const upload = params => stream => {
     let { tags, ...rest } = params
     let managedUpload
     const run = () => {
