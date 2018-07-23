@@ -46,7 +46,7 @@ module.exports = (
       return Body
     }
     stream.pipe(run())
-    return managedUpload.promise()
+    return managedUpload
   }
 
   const streamObject = (params = {}) => { 
